@@ -1,10 +1,15 @@
-# 🔐 Signal Protocol Implementation in Python
+# 🔐 Signal Protocol Suite in Python
 
-### X3DH Key Agreement + Double Ratchet Secure Messaging
+### X3DH Key Agreement & Double Ratchet Secure Messaging
 
-A comprehensive implementation of the two core cryptographic protocols that power modern end-to-end encrypted messaging systems such as Signal.
+A comprehensive implementation of the core cryptographic protocols used by modern end-to-end encrypted messaging systems such as Signal.
 
-This project demonstrates how secure communication can be established between two users through asynchronous key exchange and maintained through continuous cryptographic ratcheting.
+This repository contains both **educational (Demo)** and **enhanced production-oriented implementations** of:
+
+* X3DH (Extended Triple Diffie-Hellman)
+* Double Ratchet Algorithm
+
+Together, these protocols provide secure asynchronous key exchange, forward secrecy, post-compromise security, and authenticated end-to-end encrypted messaging.
 
 ---
 
@@ -12,13 +17,13 @@ This project demonstrates how secure communication can be established between tw
 
 ### 🔑 X3DH Protocol
 
-* X25519 Diffie-Hellman Key Exchange
+* X25519 Elliptic Curve Diffie-Hellman
 * Ed25519 Digital Signatures
 * Signed Prekeys
 * One-Time Prekeys
 * HKDF-SHA256 Key Derivation
 * AES-256-GCM Encryption
-* Authentication of Remote Identity
+* Identity Authentication
 * Asynchronous Session Establishment
 
 ### 🔄 Double Ratchet Algorithm
@@ -27,52 +32,69 @@ This project demonstrates how secure communication can be established between tw
 * Symmetric-Key Ratchet
 * Forward Secrecy
 * Post-Compromise Security
-* Out-of-Order Message Handling
-* Replay Protection
 * Message Authentication
 * Tamper Detection
+* Replay Resistance
+* Out-of-Order Message Handling
 * Session Persistence
 * Serialization & Restoration
 
 ---
 
-# 📖 Overview
+## 📖 Overview
 
-Modern secure messaging systems require two major components:
+Secure messaging systems require two major cryptographic building blocks:
 
-### 1. X3DH (Extended Triple Diffie-Hellman)
+### X3DH
 
-Used once during session initialization to establish a shared secret between two users.
+Establishes an initial shared secret between two users.
 
-### 2. Double Ratchet
+### Double Ratchet
 
-Used after X3DH to continuously derive fresh encryption keys for every message exchanged.
+Continuously evolves encryption keys after every message exchange.
 
-Together, these protocols provide strong security guarantees while maintaining usability in real-world messaging applications.
+The workflow is:
+
+```text
+Identity Verification
+        │
+        ▼
+X3DH Key Agreement
+        │
+        ▼
+Shared Secret
+        │
+        ▼
+Double Ratchet
+        │
+        ▼
+Secure Messaging
+```
 
 ---
 
 # 🔑 X3DH Architecture
 
-The X3DH protocol allows Alice and Bob to securely establish a shared secret even when Bob is offline.
-
 ```text
-                    Bob
-        ┌──────────────────────────┐
-        │ Identity Key (IKB)       │
-        │ Signed Prekey (SPKB)     │
-        │ One-Time Prekey (OPKB)   │
-        └─────────────┬────────────┘
-                      │
-               Publish Bundle
-                      │
-                      ▼
+                        Bob
+
+         Identity Key (IKB)
+         Signed Prekey (SPKB)
+         One-Time Prekey (OPKB)
+
+                     │
+                     ▼
+
+            Publish Prekey Bundle
+
+                     │
+                     ▼
 
                     Alice
 
       Downloads Bob's Prekey Bundle
 
-      Verifies SPKB Signature
+      Verifies Signature
 
       Generates Ephemeral Key (EKA)
 
@@ -83,67 +105,86 @@ The X3DH protocol allows Alice and Bob to securely establish a shared secret eve
       DH3 = DH(EKA, SPKB)
       DH4 = DH(EKA, OPKB)
 
-                      │
-                      ▼
+                     │
+                     ▼
 
       KM = DH1 || DH2 || DH3 || DH4
 
-                      │
-                      ▼
+                     │
+                     ▼
 
-            HKDF-SHA256
+               HKDF-SHA256
 
-                      │
-                      ▼
+                     │
+                     ▼
 
-             Shared Secret
+              Shared Secret
 
-                      │
-                      ▼
+                     │
+                     ▼
 
-           AES-256-GCM Encryption
+             AES-256-GCM
 ```
 
 ---
 
 # 🔄 Double Ratchet Architecture
 
-After X3DH establishes the initial shared secret, the Double Ratchet algorithm takes over.
-
 ```text
                   X3DH Shared Secret
                            │
                            ▼
 
-                    Root Key (RK)
+                     Root Key (RK)
 
                            │
 
-            ┌──────────────┴──────────────┐
-            │                             │
-            ▼                             ▼
+             ┌─────────────┴─────────────┐
+             │                           │
+             ▼                           ▼
 
-      Sending Chain                Receiving Chain
-          (CKs)                        (CKr)
+       Sending Chain              Receiving Chain
+          (CKs)                       (CKr)
 
-            │                             │
-            ▼                             ▼
+             │                           │
+             ▼                           ▼
 
-      Message Keys                  Message Keys
-          (MK)                          (MK)
+       Message Keys                Message Keys
+           (MK)                        (MK)
 
-            │
-            ▼
+             │
+             ▼
 
-       AES-256-GCM
+        AES-256-GCM
 
-            │
-            ▼
+             │
+             ▼
 
      Secure Message Exchange
 ```
 
-Every message advances the ratchet and generates a completely new encryption key.
+---
+
+# ⚙️ Requirements
+
+* Python 3.10+
+* cryptography
+
+---
+
+# 📦 Installation
+
+Install required dependency:
+
+```bash
+pip install cryptography
+```
+
+Verify installation:
+
+```bash
+pip show cryptography
+```
 
 ---
 
@@ -160,17 +201,17 @@ Every message advances the ratchet and generates a completely new encryption key
 
 ---
 
-# 🚀 Protocol Flow
+# 🚀 X3DH Protocol Flow
 
-## Phase 1 — Bob Publishes Prekeys
+### Phase 1 — Bob Publishes
 
 Bob generates:
 
-* Identity Key Pair (IKB)
-* Signed Prekey Pair (SPKB)
-* One-Time Prekey Pair (OPKB)
+* Identity Key Pair
+* Signed Prekey Pair
+* One-Time Prekey Pair
 
-Bob signs the Signed Prekey using Ed25519 and publishes:
+Bob signs the Signed Prekey and publishes:
 
 * Identity Key
 * Signed Prekey
@@ -179,15 +220,9 @@ Bob signs the Signed Prekey using Ed25519 and publishes:
 
 ---
 
-## Phase 2 — Alice Initiates Session
+### Phase 2 — Alice Initiates
 
-Alice:
-
-* Downloads Bob's Prekey Bundle
-* Verifies Signature
-* Generates Ephemeral Key Pair
-
-Computes:
+Alice verifies Bob's signature and computes:
 
 ```text
 DH1 = DH(IKA, SPKB)
@@ -208,13 +243,13 @@ Derives:
 SK = HKDF(KM)
 ```
 
-Uses the derived secret to encrypt the first message.
+Encrypts the initial message.
 
 ---
 
-## Phase 3 — Bob Receives Message
+### Phase 3 — Bob Receives
 
-Bob recomputes the same Diffie-Hellman values and derives the identical shared secret.
+Bob performs identical computations and derives the same shared secret.
 
 Result:
 
@@ -224,78 +259,52 @@ Handshake Complete
 
 ---
 
-## Phase 4 — Double Ratchet Begins
+# 🔄 Double Ratchet Workflow
 
-The X3DH shared secret becomes the initial Root Key.
+After X3DH:
 
-From this point onward:
+```text
+Shared Secret
+      │
+      ▼
+Root Key
+      │
+      ▼
+Chain Keys
+      │
+      ▼
+Message Keys
+      │
+      ▼
+AES-GCM Encryption
+```
 
-* Every message gets a unique encryption key.
-* Future messages remain secure even if a current key is compromised.
-* Past messages cannot be recovered from future keys.
-
----
-
-# 🛡 Security Properties
-
-## Forward Secrecy
-
-Compromise of a current key does not expose previously transmitted messages.
-
----
-
-## Post-Compromise Security
-
-After a new Diffie-Hellman ratchet step, security is automatically restored.
-
----
-
-## Authentication
-
-Ed25519 signatures verify the authenticity of published prekeys.
-
----
-
-## Confidentiality
-
-Only the intended recipient can decrypt messages.
-
----
-
-## Integrity
-
-AES-256-GCM detects any modification to ciphertext or associated data.
-
----
-
-## Replay Resistance
-
-Every message uses a unique ratchet-derived key.
+Each message generates a new encryption key.
 
 ---
 
 # 🧪 Testing
 
-The implementation includes comprehensive testing for:
+The implementation includes:
 
-### X3DH
+### X3DH Tests
 
 * Signature Verification
 * Shared Secret Agreement
 * Encryption & Decryption
 
-### Double Ratchet
+### Double Ratchet Tests
 
 * Basic Messaging
-* DH Ratchet Updates
-* Sequential Messages
+* DH Ratchet Triggering
+* Sequential Messaging
 * Out-of-Order Delivery
+* Tampered Message Detection
+* Session Persistence
 * Serialization
-* Session Restoration
-* Tamper Detection
 * Stress Testing
 
-Expected result:
+Expected output:
 
 ```text
 All tests passed.
@@ -303,39 +312,54 @@ All tests passed.
 
 ---
 
-# ⚠️ Educational vs Production
+# 🛡 Security Properties
 
-This repository contains both:
+### Forward Secrecy
 
-### Demo Version
+Compromise of a current key does not reveal past messages.
 
-Designed for:
+### Post-Compromise Security
 
-* Learning
+Security automatically recovers after future ratchet updates.
+
+### Authentication
+
+Ed25519 signatures verify identities.
+
+### Integrity
+
+AES-GCM detects message tampering.
+
+### Confidentiality
+
+Only intended recipients can decrypt messages.
+
+### Replay Resistance
+
+Every message uses a unique ratchet-derived key.
+
+---
+
+# ⚠️ Disclaimer
+
+This project is intended for:
+
+* Education
 * Research
-* Academic Understanding
-* Protocol Exploration
+* Cryptography Learning
+* Academic Demonstration
 
-### Production Version
-
-Enhanced with:
-
-* Robust Session Management
-* Secure State Persistence
-* Serialization Support
-* Improved Error Handling
-* Message Key Storage
-* Out-of-Order Message Recovery
+The Production implementation follows secure design principles but should undergo additional security review, testing, and auditing before deployment in real-world environments.
 
 ---
 
 # 📚 References
 
-### Signal X3DH Specification
+### X3DH Specification
 
 https://signal.org/docs/specifications/x3dh/
 
-### Signal Double Ratchet Specification
+### Double Ratchet Specification
 
 https://signal.org/docs/specifications/doubleratchet/
 
@@ -347,10 +371,10 @@ https://signal.org
 
 # 👨‍💻 Author
 
-Developed as a complete implementation of the Signal Protocol core cryptographic components:
+Developed as a complete educational and production-oriented implementation of:
 
-* X3DH Key Agreement
-* Double Ratchet Algorithm
+* X3DH Key Agreement Protocol
+* Signal Double Ratchet Algorithm
 
 using Python and the Cryptography library.
 
@@ -360,17 +384,16 @@ using Python and the Cryptography library.
 
 If you found this project useful:
 
-* Star the repository
-* Fork the project
-* Share with others
-* Contribute improvements
+⭐ Star the repository
+
+🍴 Fork the project
+
+🔐 Explore secure messaging internals
+
+🚀 Learn modern applied cryptography
 
 ---
 
-## 🔐 From Initial Trust to Continuous Secure Messaging
+## From Initial Trust to Continuous Secure Messaging
 
-This project demonstrates the complete lifecycle of secure communication:
-
-**Identity Verification → Secure Key Exchange → Shared Secret Generation → Continuous Key Evolution → End-to-End Encrypted Messaging**
-
-The same foundational concepts used by modern secure messaging systems are implemented here for educational and research purposes.
+**Identity Authentication → X3DH Handshake → Shared Secret Generation → Double Ratchet → End-to-End Encrypted Communication**
