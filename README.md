@@ -378,19 +378,6 @@ Developed as a complete educational and production-oriented implementation of:
 
 using Python and the Cryptography library.
 
----
-
-# ⭐ Support
-
-If you found this project useful:
-
-⭐ Star the repository
-
-🍴 Fork the project
-
-🔐 Explore secure messaging internals
-
-🚀 Learn modern applied cryptography
 
 ---
 
