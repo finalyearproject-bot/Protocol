@@ -1,43 +1,60 @@
-# 🔐 Signal Protocol Suite in Python
+This is a great idea. Upgrading the documentation to reflect the post-quantum implementation ensures the repository remains cutting-edge.
 
-### X3DH Key Agreement & Double Ratchet Secure Messaging
+Here is the fully merged and formatted `README.md`, integrating the PQXDH protocol seamlessly into your existing structure while maintaining its clean, professional layout:
 
-A comprehensive implementation of the core cryptographic protocols used by modern end-to-end encrypted messaging systems such as Signal.
+---
+
+# 🔐 Post-Quantum Signal Protocol Suite in Python
+
+### PQXDH Key Agreement & Double Ratchet Secure Messaging
+
+A comprehensive implementation of the core cryptographic protocols used by modern end-to-end encrypted messaging systems to secure communications against both classical and quantum threats.
 
 This repository contains both **educational (Demo)** and **enhanced production-oriented implementations** of:
 
 * X3DH (Extended Triple Diffie-Hellman)
+* **PQXDH (Post-Quantum Extended Diffie-Hellman)**
+
 * Double Ratchet Algorithm
 
-Together, these protocols provide secure asynchronous key exchange, forward secrecy, post-compromise security, and authenticated end-to-end encrypted messaging.
+Together, these protocols provide secure asynchronous key exchange, forward secrecy, post-compromise security, quantum resistance, and authenticated end-to-end encrypted messaging.
 
 ---
 
 ## ✨ Features
 
-### 🔑 X3DH Protocol
+### 🔑 Key Agreement (X3DH & PQXDH)
 
 * X25519 Elliptic Curve Diffie-Hellman
-* Ed25519 Digital Signatures
-* Signed Prekeys
-* One-Time Prekeys
-* HKDF-SHA256 Key Derivation
-* AES-256-GCM Encryption
-* Identity Authentication
+
+
+* **CRYSTALS-Kyber-1024 (ML-KEM) Key Encapsulation**
+
+* **Hybrid Key Derivation (Classical + Post-Quantum)**
+
+* Ed25519 Digital Signatures for Identity Authentication
+
+
+* Signed Prekeys & One-Time Prekeys
+
+
+* HKDF-SHA512 Key Derivation
+
+
 * Asynchronous Session Establishment
+
+
 
 ### 🔄 Double Ratchet Algorithm
 
 * Diffie-Hellman Ratchet
 * Symmetric-Key Ratchet
-* Forward Secrecy
-* Post-Compromise Security
-* Message Authentication
-* Tamper Detection
-* Replay Resistance
-* Out-of-Order Message Handling
-* Session Persistence
-* Serialization & Restoration
+* Forward Secrecy & Post-Compromise Security
+
+
+* Message Authentication & Tamper Detection
+* Replay Resistance & Out-of-Order Message Handling
+* Session Persistence, Serialization & Restoration
 
 ---
 
@@ -45,9 +62,9 @@ Together, these protocols provide secure asynchronous key exchange, forward secr
 
 Secure messaging systems require two major cryptographic building blocks:
 
-### X3DH
+### PQXDH / X3DH
 
-Establishes an initial shared secret between two users.
+Establishes an initial shared secret between two users, blending classical discrete logarithm cryptography with lattice-based post-quantum cryptography.
 
 ### Double Ratchet
 
@@ -59,79 +76,82 @@ The workflow is:
 Identity Verification
         │
         ▼
-X3DH Key Agreement
+PQXDH Key Agreement (Hybrid)
         │
         ▼
-Shared Secret
+Hybrid Shared Secret
         │
         ▼
 Double Ratchet
         │
         ▼
 Secure Messaging
+
 ```
 
 ---
 
-# 🔑 X3DH Architecture
+## 🔑 PQXDH Architecture
 
 ```text
-                        Bob
+                       Bob
 
-         Identity Key (IKB)
-         Signed Prekey (SPKB)
-         One-Time Prekey (OPKB)
+         Identity Key (IKB - X25519)
+         Signed Prekey (SPKB - X25519)
+         One-Time Prekey (OPKB - X25519)
+         Kyber Public Key (PQPKB - Kyber-1024)
 
-                     │
-                     ▼
+                       │
+                       ▼
 
-            Publish Prekey Bundle
+             Publish Prekey Bundle
 
-                     │
-                     ▼
+                       │
+                       ▼
 
-                    Alice
+                     Alice
 
       Downloads Bob's Prekey Bundle
 
-      Verifies Signature
+      Verifies XEdDSA Signatures
 
-      Generates Ephemeral Key (EKA)
+      Generates Ephemeral Key (EKA - X25519)
+      Encapsulates PQ Secret (CT, SS)
 
-      Computes:
-
+      Computes Classical DH:
       DH1 = DH(IKA, SPKB)
       DH2 = DH(EKA, IKB)
       DH3 = DH(EKA, SPKB)
-      DH4 = DH(EKA, OPKB)
+      DH4 = DH(EKA, OPKB) (If available)
 
-                     │
-                     ▼
+                       │
+                       ▼
 
-      KM = DH1 || DH2 || DH3 || DH4
+      KM = DH1 || DH2 || DH3 || [DH4] || SS
 
-                     │
-                     ▼
+                       │
+                       ▼
 
-               HKDF-SHA256
+                 HKDF-SHA512
 
-                     │
-                     ▼
+                       │
+                       ▼
 
-              Shared Secret
+             Hybrid Shared Secret
 
-                     │
-                     ▼
+                       │
+                       ▼
 
-             AES-256-GCM
+                 AES-256-GCM
+
 ```
 
 ---
 
-# 🔄 Double Ratchet Architecture
+## 🔄 Double Ratchet Architecture
 
 ```text
-                  X3DH Shared Secret
+                 PQXDH Hybrid Shared Secret
                            │
                            ▼
 
@@ -143,14 +163,14 @@ Secure Messaging
              │                           │
              ▼                           ▼
 
-       Sending Chain              Receiving Chain
+       Sending Chain               Receiving Chain
           (CKs)                       (CKr)
 
              │                           │
              ▼                           ▼
 
-       Message Keys                Message Keys
-           (MK)                        (MK)
+       Message Keys                 Message Keys
+           (MK)                         (MK)
 
              │
              ▼
@@ -161,110 +181,124 @@ Secure Messaging
              ▼
 
      Secure Message Exchange
+
 ```
 
 ---
 
-# ⚙️ Requirements
+## ⚙️ Requirements
 
 * Python 3.10+
-* cryptography
+* `cryptography`
+
+* `liboqs-python` (Open Quantum Safe library for NIST FIPS 203 algorithms)
+
+
 
 ---
 
-# 📦 Installation
+## 📦 Installation
 
-Install required dependency:
+Install required dependencies:
 
 ```bash
-pip install cryptography
+pip install cryptography liboqs-python
+
 ```
 
 Verify installation:
 
 ```bash
-pip show cryptography
+pip show cryptography liboqs-python
+
 ```
 
 ---
 
-# 🔐 Cryptographic Components
+## 🔐 Cryptographic Components
 
-| Component            | Purpose                     |
-| -------------------- | --------------------------- |
-| X25519               | Diffie-Hellman Key Exchange |
-| Ed25519              | Digital Signatures          |
-| HKDF-SHA256          | Key Derivation              |
-| HMAC-SHA256          | Chain Key Derivation        |
-| AES-256-GCM          | Authenticated Encryption    |
-| Secure Random Nonces | Encryption Security         |
+| Component | Purpose |
+| --- | --- |
+| **Kyber-1024** | **Post-Quantum Key Encapsulation (MLWE)**<br> |
+| X25519 | Classical Diffie-Hellman Key Exchange
+
+ |
+| Ed25519 | Digital Signatures for Authentication
+
+ |
+| HKDF-SHA512 | Hybrid Key Derivation
+
+ |
+| HMAC-SHA256 | Chain Key Derivation |
+| AES-256-GCM | Authenticated Encryption |
 
 ---
 
-# 🚀 X3DH Protocol Flow
+## 🚀 PQXDH Protocol Flow
 
 ### Phase 1 — Bob Publishes
 
 Bob generates:
 
-* Identity Key Pair
-* Signed Prekey Pair
-* One-Time Prekey Pair
+* Classical Identity, Signed Prekey, and One-Time Prekeys (X25519).
 
-Bob signs the Signed Prekey and publishes:
 
-* Identity Key
-* Signed Prekey
-* Signature
-* One-Time Prekey
+* Post-Quantum Last-Resort and One-Time Prekeys (Kyber-1024).
+
+
+
+Bob signs the Signed Prekeys using his Identity Key and publishes the complete Hybrid Prekey Bundle to the server.
 
 ---
 
 ### Phase 2 — Alice Initiates
 
-Alice verifies Bob's signature and computes:
+Alice verifies Bob's signatures and computes the classical exchanges:
 
 ```text
 DH1 = DH(IKA, SPKB)
 DH2 = DH(EKA, IKB)
 DH3 = DH(EKA, SPKB)
-DH4 = DH(EKA, OPKB)
+
 ```
 
-Combines all secrets:
+She then encapsulates a post-quantum secret using Bob's Kyber Public Key, yielding a Ciphertext (`CT`) and a Shared Secret (`SS`).
+
+She combines all secrets:
 
 ```text
-KM = DH1 || DH2 || DH3 || DH4
+KM = DH1 || DH2 || DH3 || SS
+
 ```
 
-Derives:
-
-```text
-SK = HKDF(KM)
-```
-
-Encrypts the initial message.
+Derives the master secret via HKDF, and sends her Ephemeral Key (`EKA`) and the Ciphertext (`CT`) to Bob.
 
 ---
 
 ### Phase 3 — Bob Receives
 
-Bob performs identical computations and derives the same shared secret.
+Bob receives Alice's initialization message. He:
 
-Result:
+1. Recomputes the classical DH segments using his private keys.
 
-```text
-Handshake Complete
-```
+
+2. Decapsulates the Ciphertext (`CT`) using his Kyber Private Key to recover the Post-Quantum Shared Secret (`SS`).
+
+
+3. Derives the identical hybrid shared secret via HKDF.
+
+
+
+Result: **Quantum-Resistant Handshake Complete**.
 
 ---
 
-# 🔄 Double Ratchet Workflow
+## 🔄 Double Ratchet Workflow
 
-After X3DH:
+After PQXDH establishes the Hybrid Shared Secret:
 
 ```text
-Shared Secret
+Hybrid Shared Secret
       │
       ▼
 Root Key
@@ -277,110 +311,67 @@ Message Keys
       │
       ▼
 AES-GCM Encryption
+
 ```
 
-Each message generates a new encryption key.
+Each message generates a new encryption key, ratcheting both DH and Symmetric chains forward.
 
 ---
 
-# 🧪 Testing
+## 🧪 Testing
 
 The implementation includes:
 
-### X3DH Tests
+### PQXDH / X3DH Tests
 
-* Signature Verification
-* Shared Secret Agreement
-* Encryption & Decryption
+* XEdDSA Signature Verification
+* Lattice-based Encapsulation & Decapsulation
+* Hybrid Shared Secret Agreement
+* Cross-Platform Mocking vs. Production `liboqs` bindings
 
 ### Double Ratchet Tests
 
-* Basic Messaging
 * DH Ratchet Triggering
-* Sequential Messaging
-* Out-of-Order Delivery
-* Tampered Message Detection
-* Session Persistence
-* Serialization
-* Stress Testing
+* Out-of-Order Delivery & Tampered Message Detection
+* Session Persistence & Serialization
 
 Expected output:
 
 ```text
-All tests passed.
+All tests passed. Handshake Successful: True
+
 ```
 
 ---
 
-# 🛡 Security Properties
+## 🛡 Security Properties
 
-### Forward Secrecy
+### Quantum Resistance (HNDL Protection)
 
-Compromise of a current key does not reveal past messages.
+Protects against "Harvest-Now-Decrypt-Later" attacks. An adversary must break both the elliptic-curve problem and the lattice-based Module-LWE problem to derive the shared key.
 
-### Post-Compromise Security
+### Forward Secrecy & Post-Compromise Security
 
-Security automatically recovers after future ratchet updates.
+Compromise of a current key does not reveal past messages, and security automatically recovers after future ratchet updates.
 
-### Authentication
+### Authentication & Integrity
 
-Ed25519 signatures verify identities.
-
-### Integrity
-
-AES-GCM detects message tampering.
-
-### Confidentiality
-
-Only intended recipients can decrypt messages.
-
-### Replay Resistance
-
-Every message uses a unique ratchet-derived key.
+Ed25519 signatures verify identities, and AES-GCM detects message tampering. *(Note: Authentication relies on classical ECC and is not currently quantum-secure against active adversaries)*.
 
 ---
 
-# ⚠️ Disclaimer
+## ⚠️ Disclaimer
 
-This project is intended for:
-
-* Education
-* Research
-* Cryptography Learning
-* Academic Demonstration
-
-The Production implementation follows secure design principles but should undergo additional security review, testing, and auditing before deployment in real-world environments.
+This project is intended for Education, Research, and Cryptography Learning. The Production implementation utilizes audited libraries (`liboqs`), but the wrapper code should undergo additional security review, testing, and auditing before deployment in real-world, high-stakes environments.
 
 ---
 
-# 📚 References
+## 📚 References
 
-### X3DH Specification
+* **PQXDH Specification:** [Signal Post-Quantum Extended Diffie-Hellman](https://signal.org/docs/specifications/pqxdh/)
+* **NIST FIPS 203:** Module-Lattice-Based Key-Encapsulation Mechanism Standard
 
-https://signal.org/docs/specifications/x3dh/
 
-### Double Ratchet Specification
-
-https://signal.org/docs/specifications/doubleratchet/
-
-### Signal Protocol
-
-https://signal.org
+* **Double Ratchet Specification:** [Signal Double Ratchet Algorithm](https://signal.org/docs/specifications/doubleratchet/)
 
 ---
-
-# 👨‍💻 Author
-
-Developed as a complete educational and production-oriented implementation of:
-
-* X3DH Key Agreement Protocol
-* Signal Double Ratchet Algorithm
-
-using Python and the Cryptography library.
-
-
----
-
-## From Initial Trust to Continuous Secure Messaging
-
-**Identity Authentication → X3DH Handshake → Shared Secret Generation → Double Ratchet → End-to-End Encrypted Communication**
