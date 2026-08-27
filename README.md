@@ -1,8 +1,3 @@
-This is a great idea. Upgrading the documentation to reflect the post-quantum implementation ensures the repository remains cutting-edge.
-
-Here is the fully merged and formatted `README.md`, integrating the PQXDH protocol seamlessly into your existing structure while maintaining its clean, professional layout:
-
----
 
 # 🔐 Post-Quantum Signal Protocol Suite in Python
 
